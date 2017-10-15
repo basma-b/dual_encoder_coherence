@@ -89,17 +89,21 @@ def main():
 
         print("Now loading entity-grid data...")
         
-        train_egrid  = data_helper.load_and_numberize_egrids_with_labels(filelist="./list.train", 
+        train_egrid, train_label  = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.train", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
 
-        dev_egrid     = data_helper.load_and_numberize_egrids_with_labels(filelist="./list.dev", 
+        dev_egrid, dev_label     = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.dev", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
 
-        test_egrid   = data_helper.load_and_numberize_egrids_with_labels(filelist="./list.test", 
+        test_egrid, test_label   = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.test", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
         
+        assert train_label == train_l
+        assert dev_label == dev_l
+        assert test_label == test_l
+        
         #randomly shuffle the training data
-        np.random.shuffle(train_egrid)
+        #np.random.shuffle(train_egrid)
         
         print("Now loading embedding matrix...")
         num_words = min(MAX_NB_WORDS, len(word_index)) + 1

@@ -74,6 +74,7 @@ def load_and_numberize_egrids_with_labels(filelist="list_of_grid_pair.txt", maxl
         #print(pair)
 
         pos_doc = pair.split("\t")[0].strip()
+        label = pair.split("\t")[1].strip()
 
         #loading Egrid for POS document
         grid_1 = load_egrid(pos_doc,w_size)
@@ -82,6 +83,7 @@ def load_and_numberize_egrids_with_labels(filelist="list_of_grid_pair.txt", maxl
 
         #if grid_0 != grid_1:
         sentences_1.append(grid_1)
+        labels.append(label)
                   
     #assert len(sentences_0) == len(sentences_1)
 
@@ -99,7 +101,7 @@ def load_and_numberize_egrids_with_labels(filelist="list_of_grid_pair.txt", maxl
     X_1 = sequence.pad_sequences(X_1, maxlen)
     #labels = sequence.pad_sequences(labels, maxlen)
 
-    return X_1
+    return X_1, labels
 
 
 #loading the grid with normal CNN
