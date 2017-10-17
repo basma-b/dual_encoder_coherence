@@ -83,7 +83,7 @@ def load_and_numberize_egrids_with_labels(filelist="list_of_grid_pair.txt", maxl
 
         #if grid_0 != grid_1:
         sentences_1.append(grid_1)
-        labels.append(label)
+        labels.append(int(label))
                   
     #assert len(sentences_0) == len(sentences_1)
 
@@ -225,7 +225,7 @@ def numberize_sentences(sentences, vocab_idmap):
         tmp_list = []
         #print(sid)
         for wrd in sent.split():
-            if wrd in vocab_idmap:
+            if wrd in vocab_idmap.keys():
                 wrd_id = vocab_idmap[wrd]  
             else:
                 wrd_id = 0

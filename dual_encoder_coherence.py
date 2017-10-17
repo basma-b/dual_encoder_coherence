@@ -11,12 +11,12 @@ from keras.models import Sequential
 from keras.models import load_model as K_load_model
 from keras.utils import np_utils
 from keras.layers import Dense, Input, Flatten, Dropout, LSTM, Merge, Activation
-from keras.layers import Conv1D, MaxPooling1D, Embedding, merge
+from keras.layers import Conv1D, MaxPooling1D, Embedding, merge, AveragePooling1D, Convolution1D
 from keras.models import Model
 from utilities import my_callbacks
 import argparse
 np.random.seed(1337)
-from utilities.data_helper import compute_recall_ks, str2bool
+from utilities.data_helper import compute_recall_ks, str2bool, init_vocab, load_and_numberize_egrids_with_labels
 #import cPickle
 
 
@@ -32,11 +32,11 @@ def main():
     parser.add_argument('--n_epochs', type=int, default=50, help='Num epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--optimizer', type=str, default='adam', help='Optimizer')
-    parser.add_argument("--dropout_ratio",type="float", default=0.5, help="ratio of cells to drop out")
+    parser.add_argument("--dropout_ratio",type=float, default=0.5, help="ratio of cells to drop out")
     parser.add_argument('--n_recurrent_layers', type=int, default=1, help='Num recurrent layers')
-    parser.add_argument("--w_size", type="int", default = 5, help="window size length of neighborhood in words") 
-    parser.add_argument("--pool_length", type="int", default = 6, help="length for max pooling") 
-    parser.add_argument("--nb_filter", type="int", default=150, help="nb of filter to be applied in convolution over words") 
+    parser.add_argument("--w_size", type=int, default = 5, help="window size length of neighborhood in words") 
+    parser.add_argument("--pool_length", type=int, default = 6, help="length for max pooling") 
+    parser.add_argument("--nb_filter", type=int, default=150, help="nb of filter to be applied in convolution over words") 
     parser.add_argument('--input_dir', type=str, default='./dataset/', help='Input dir')
     parser.add_argument('--save_model', type='bool', default=True, help='Whether to save the model')
     parser.add_argument('--model_fname', type=str, default='model/dual_encoder_lstm_classifier.h5', help='Model filename')
@@ -85,22 +85,25 @@ def main():
         print("MAX_SEQUENCE_LENGTH: {}".format(MAX_SEQUENCE_LENGTH))
         print("MAX_NB_WORDS: {}".format(MAX_NB_WORDS))
         
-        vocabs, E = data_helper.init_vocab(args.emb_dim)
+        vocabs, E = init_vocab(args.emb_dim)
 
         print("Now loading entity-grid data...")
         
-        train_egrid, train_label  = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.train", 
+        train_egrid, train_label  = load_and_numberize_egrids_with_labels(filelist="./dataset/list.train", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
 
-        dev_egrid, dev_label     = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.dev", 
+        dev_egrid, dev_label = load_and_numberize_egrids_with_labels(filelist="./dataset/list.dev", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
 
-        test_egrid, test_label   = data_helper.load_and_numberize_egrids_with_labels(filelist="./dataset/list.test", 
+        test_egrid, test_label   = load_and_numberize_egrids_with_labels(filelist="./dataset/list.test", 
                 maxlen=MAX_SEQUENCE_LENGTH, w_size=args.w_size, vocabs=vocabs)
         
-        assert train_label == train_l
-        assert dev_label == dev_l
-        assert test_label == test_l
+        #print (train_label[:10])
+        #print (list(train_l[:10]))
+        
+        #assert train_label == list(train_l)
+        #assert dev_label == list(dev_l)
+        #assert test_label == list(test_l)
         
         #randomly shuffle the training data
         #np.random.shuffle(train_egrid)
@@ -130,7 +133,7 @@ def main():
         
         print("Now building the CNN egrid model...")
         
-        sent_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32', name='sent_input')
+        sent_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 
         x = Embedding(output_dim=args.emb_dim, weights=[E], input_dim=len(vocabs), input_length=MAX_SEQUENCE_LENGTH, trainable = True)(sent_input)
 
@@ -155,7 +158,7 @@ def main():
         
         context_branch_cnn = cnn(egrid_input)
         
-        concatenated = merge([context_branch, response_branch], mode='mult')
+        concatenated = merge([context_branch, response_branch], mode='mul')
         concatenated = merge([concatenated, context_branch_cnn], mode='concat')
         out = Dense((1), activation = "sigmoid") (concatenated)
 
